@@ -108,34 +108,40 @@
   }
   @keyframes blink { 50% { opacity: 0; } }
 
-  /* ── TOAST ── */
-  .toast {
+  /* ── CENTER POPUP ── */
+  .center-popup {
+    display: none;
     position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%) translateY(-120%);
+    inset: 0;
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .center-popup.show { display: flex; }
+  .center-popup-inner {
     background: var(--panel);
-    border: 2px solid var(--gold);
-    border-radius: 12px;
-    padding: 16px 28px;
-    text-align: center;
+    border: 3px solid var(--gold);
+    border-radius: 18px;
+    padding: 28px 48px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 14px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--gold);
-    z-index: 999;
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 4px 40px #00000099, 0 0 30px #ffd70044;
-    max-width: 90vw;
-    min-width: 260px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(255,215,0,0.35), 0 8px 40px rgba(0,0,0,0.9);
+    animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    max-width: 80vw;
+    line-height: 1.5;
   }
-  .toast.visible {
-    transform: translateX(-50%) translateY(16px);
+  .center-popup.win .center-popup-inner  { border-color: var(--green); color: var(--green); box-shadow: 0 0 60px rgba(0,255,136,0.35), 0 8px 40px rgba(0,0,0,0.9); }
+  .center-popup.lose .center-popup-inner { border-color: var(--red);   color: var(--red);   box-shadow: 0 0 60px rgba(255,51,68,0.35), 0 8px 40px rgba(0,0,0,0.9); }
+  @keyframes popIn {
+    from { transform: scale(0.6); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
   }
-  .toast.win { border-color: var(--green); color: var(--green); }
-  .toast.lose { border-color: var(--red); color: var(--red); }
 
-  /* ── WALLET ITEMS (ticket / pull tab previews) ── */
+  /* ── WALLET ITEMS ── */
   .wallet-items {
     display: flex;
     gap: 20px;
@@ -167,6 +173,7 @@
   }
 
   /* ── GAME GRID ── */
+  .games-section { width: 100%; max-width: 520px; }
   .games-label {
     font-size: 10px;
     letter-spacing: 4px;
@@ -179,7 +186,6 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
     width: 100%;
-    max-width: 520px;
   }
   .game-btn {
     display: flex;
@@ -237,8 +243,10 @@
 </head>
 <body>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<!-- CENTER POPUP -->
+<div class="center-popup" id="centerPopup">
+  <div class="center-popup-inner" id="centerPopupMsg"></div>
+</div>
 
 <div class="wallet-header">
   <h1>💳 Bar WALLET</h1>
@@ -256,49 +264,47 @@
 <div class="wallet-items">
   <div class="wallet-item">
     <div class="wallet-item-label">KENO TICKET</div>
-    <iframe src="https://marcitech.is-a.dev/GoRedKeno/GoRedKeno.html?target=ticket" width="340" height="520" align=center  scrolling="no" title="Keno Ticket"></iframe>
+    <iframe src="https://marcitech.is-a.dev/GoRedKeno/GoRedKeno.html?target=ticket" width="340" height="520" scrolling="no" title="Keno Ticket"></iframe>
   </div>
   <div class="wallet-item">
     <div class="wallet-item-label">PULL TAB</div>
-    <iframe src="https://marcitech.is-a.dev/PullTabs/PullTabs.html?target=pulltab" width="270" height="520" align=center scrolling="no" title="Pull Tab"></iframe>
+    <iframe src="https://marcitech.is-a.dev/PullTabs/PullTabs.html?target=pulltab" width="270" height="520" scrolling="no" title="Pull Tab"></iframe>
   </div>
 </div>
 
-<!-- GAME LINKS -->
-<div class="games-label">PLAY A GAME · $1.00 PER PLAY</div>
-<div class="games-grid" id="gamesGrid">
-  <a class="game-btn keno" id="btnKeno" href="../GoRedKeno/index.html" onclick="return launchGame(event, this)">
-    <span class="icon">🎱</span>
-    <span class="name">GO RED KENO</span>
-    <span class="cost">$1 · WIN UP TO $500</span>
-  </a>
-  <a class="game-btn tunes" id="btnTunes" href="../PressTunes/index.html" onclick="return launchGame(event, this)">
-    <span class="icon">🎵</span>
-    <span class="name">PRESS TUNES</span>
-    <span class="cost">$1 · WIN UP TO $50</span>
-  </a>
-  <a class="game-btn pulltab" id="btnPull" href="../PullTabs/index.html" onclick="return launchGame(event, this)">
-    <span class="icon">🎟️</span>
-    <span class="name">PULL TABS</span>
-    <span class="cost">$1 · WIN UP TO $200</span>
-  </a>
-  <a class="game-btn arcade" id="btnArcade" href="../SuperTouch/index.html" onclick="return launchGame(event, this)">
-    <span class="icon">🕹️</span>
-    <span class="name">SUPER TOUCH</span>
-    <span class="cost">FREE PLAY</span>
-  </a>
+<!-- GAME LINKS — hidden when ?menu=off -->
+<div class="games-section" id="gamesSection">
+  <div class="games-label">PLAY A GAME · $1.00 PER PLAY</div>
+  <div class="games-grid" id="gamesGrid">
+    <a class="game-btn keno" id="btnKeno" href="../GoRedKeno/index.html" onclick="return launchGame(event, this)">
+      <span class="icon">🎱</span>
+      <span class="name">GO RED KENO</span>
+      <span class="cost">$1 · WIN UP TO $500</span>
+    </a>
+    <a class="game-btn tunes" id="btnTunes" href="../PressTunes/index.html" onclick="return launchGame(event, this)">
+      <span class="icon">🎵</span>
+      <span class="name">PRESS TUNES</span>
+      <span class="cost">$1 · WIN UP TO $50</span>
+    </a>
+    <a class="game-btn pulltab" id="btnPull" href="../PullTabs/index.html" onclick="return launchGame(event, this)">
+      <span class="icon">🎟️</span>
+      <span class="name">PULL TABS</span>
+      <span class="cost">$1 · WIN UP TO $200</span>
+    </a>
+    <a class="game-btn arcade" id="btnArcade" href="../SuperTouch/index.html" onclick="return launchGame(event, this)">
+      <span class="icon">🕹️</span>
+      <span class="name">SUPER TOUCH</span>
+      <span class="cost">$1 PER GAME</span>
+    </a>
+  </div>
 </div>
 
 <script>
-// ─── SHARED WALLET KEY ───────────────────────────────────────────────────────
 const WALLET_KEY = 'arcade_wallet';
 
 function getBalance() {
   const v = localStorage.getItem(WALLET_KEY);
-  if (v === null) {
-    localStorage.setItem(WALLET_KEY, '20');
-    return 20;
-  }
+  if (v === null) { localStorage.setItem(WALLET_KEY, '20'); return 20; }
   return parseFloat(v) || 0;
 }
 function setBalance(val) {
@@ -308,90 +314,92 @@ function setBalance(val) {
   return clamped;
 }
 
-// ─── RENDER ──────────────────────────────────────────────────────────────────
 function renderBalance(bal) {
   bal = typeof bal === 'number' ? bal : getBalance();
   document.getElementById('balanceAmt').textContent = bal.toFixed(0);
   const zeroMsg = document.getElementById('zeroMsg');
   zeroMsg.style.display = bal <= 0 ? 'block' : 'none';
-
-  // disable paid game buttons if broke
-  ['btnKeno','btnTunes','btnPull'].forEach(id => {
+  ['btnKeno','btnTunes','btnPull','btnArcade'].forEach(id => {
     const btn = document.getElementById(id);
-    if (bal <= 0) btn.classList.add('disabled');
-    else btn.classList.remove('disabled');
+    if (btn) {
+      if (bal <= 0) btn.classList.add('disabled');
+      else btn.classList.remove('disabled');
+    }
   });
 }
 
-// ─── TOAST ───────────────────────────────────────────────────────────────────
-let toastTimer = null;
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast visible ' + (type || '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.classList.remove('visible'); }, 4000);
+// ── Center popup ──────────────────────────────────────────────────────────────
+let _popTmr;
+function popup(msg, type) {
+  const el = document.getElementById('centerPopup');
+  const msgEl = document.getElementById('centerPopupMsg');
+  msgEl.textContent = msg;
+  el.className = 'center-popup show ' + (type || '');
+  clearTimeout(_popTmr);
+  _popTmr = setTimeout(() => el.classList.remove('show'), 3500);
 }
 
-// ─── FLASH BALANCE ────────────────────────────────────────────────────────────
 function flashBalance(type) {
   const el = document.getElementById('balanceDisplay');
   el.classList.add(type === 'win' ? 'win-flash' : 'lose-flash');
   setTimeout(() => el.classList.remove('win-flash', 'lose-flash'), 1500);
 }
 
-// ─── URL PARAMS: betwin / betlose ─────────────────────────────────────────────
+// ── URL params: betwin / betlose ──────────────────────────────────────────────
 (function() {
   const params = new URLSearchParams(window.location.search);
   if (params.has('betwin')) {
     const label = params.get('betwin') || 'bet';
     const newBal = setBalance(getBalance() + 10);
     flashBalance('win');
-    showToast(`🎉 Congratulations! You won $10 in the ${label} bet! Balance: $${newBal}`, 'win');
-    // clean URL
+    popup('🎉 You won $10 in the ' + label + ' bet!\nBalance: $' + newBal, 'win');
     history.replaceState({}, '', window.location.pathname);
   } else if (params.has('betlose')) {
     const label = params.get('betlose') || 'bet';
     const newBal = setBalance(getBalance() - 10);
     flashBalance('lose');
-    showToast(`😔 Sorry, you lost $10 in the ${label} bet. Balance: $${newBal}`, 'lose');
+    popup('😔 You lost $10 in the ' + label + ' bet.\nBalance: $' + newBal, 'lose');
     history.replaceState({}, '', window.location.pathname);
+  }
+
+  // ── ?menu=off → hide the games grid ─────────────────────────────────────────
+  if (params.get('menu') === 'off') {
+    const sec = document.getElementById('gamesSection');
+    if (sec) sec.style.display = 'none';
   }
 })();
 
-// ─── WIN CALLBACK: sub-apps post a message when they finish ──────────────────
+// ── Win callback from sub-apps ────────────────────────────────────────────────
 window.addEventListener('message', function(e) {
   const d = e.data;
   if (!d || typeof d !== 'object') return;
-
   if (d.type === 'ARCADE_WIN' && typeof d.amount === 'number' && d.amount > 0) {
     const newBal = setBalance(getBalance() + d.amount);
     flashBalance('win');
-    showToast(`🎉 You won $${d.amount}! New balance: $${newBal}`, 'win');
+    popup('🎉 You won $' + d.amount + '!\nNew balance: $' + newBal, 'win');
   }
   if (d.type === 'ARCADE_LOSE') {
     renderBalance();
   }
 });
 
-// ─── LAUNCH GAME: deduct $1 then navigate ────────────────────────────────────
+// ── Launch game: navigate WITHOUT deducting — the game's own index handles $1 ─
+// (The individual game index files patch their own iframes and charge on play.)
+// From the wallet we just navigate directly so the $1 is only charged once
+// (by the game page when you actually press play/start, not on arrival).
 function launchGame(evt, btn) {
-  // Super Touch is free
-  if (btn.id === 'btnArcade') return true;
-
   evt.preventDefault();
   const bal = getBalance();
   if (bal <= 0) {
-    showToast('⛔ No credits! Add funds to play.', 'lose');
+    popup('⛔ No credits! Add funds to play.', 'lose');
     return false;
   }
-  const newBal = setBalance(bal - 1);
-  showToast(`-$1 deducted. Balance: $${newBal}`, '');
-  setTimeout(() => { window.location.href = btn.href; }, 600);
+  // Navigate without deducting — game page handles first charge
+  window.location.href = btn.href;
   return false;
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────────
 renderBalance(getBalance());
 </script>
 </body>
