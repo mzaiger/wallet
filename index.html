@@ -260,7 +260,18 @@
   <div class="balance-zero" id="zeroMsg">⛔ OUT OF CREDITS — ADD FUNDS</div>
 </div>
 
-  <!-- GAME LINKS — hidden when ?menu=off -->
+<!-- WALLET ITEMS: ticket + pull tab iframes -->
+<div class="wallet-items">
+  <div class="wallet-item">
+    <div class="wallet-item-label">KENO TICKET</div>
+    <iframe src="https://marcitech.is-a.dev/GoRedKeno/GoRedKeno.html?target=ticket" width="340" height="530" scrolling="no" title="Keno Ticket"></iframe>
+  </div>
+  <div class="wallet-item">
+    <div class="wallet-item-label">PULL TAB</div>
+    <iframe src="https://marcitech.is-a.dev/PullTabs/PullTabs.html?target=pulltab" width="270" height="530" scrolling="no" title="Pull Tab"></iframe>
+  </div>
+</div>
+    <!-- GAME LINKS — hidden when ?menu=off -->
 <div class="games-section" id="gamesSection">
   <div class="games-label">PLAY A GAME · $1.00 PER PLAY</div>
   <div class="games-grid" id="gamesGrid">
@@ -285,18 +296,6 @@
       <span class="cost">$1 PER GAME</span>
     </a>
   </div>
-
-<!-- WALLET ITEMS: ticket + pull tab iframes -->
-<div class="wallet-items">
-  <div class="wallet-item">
-    <div class="wallet-item-label">KENO TICKET</div>
-    <iframe src="https://marcitech.is-a.dev/GoRedKeno/GoRedKeno.html?target=ticket" width="340" height="530" scrolling="no" title="Keno Ticket"></iframe>
-  </div>
-  <div class="wallet-item">
-    <div class="wallet-item-label">PULL TAB</div>
-    <iframe src="https://marcitech.is-a.dev/PullTabs/PullTabs.html?target=pulltab" width="270" height="530" scrolling="no" title="Pull Tab"></iframe>
-  </div>
-</div>
 </div>  
 <script>
 const WALLET_KEY = 'arcade_wallet';
