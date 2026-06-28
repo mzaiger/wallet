@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arcade Wallet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #ffd700;
+    --green: #00ff88;
+    --cyan: #00bfff;
+    --red: #ff3344;
+    --bg: #07071a;
+    --panel: #0d0d2a;
+    --border: #1e2a5e;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    color: #cce;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .wallet-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .wallet-header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(22px, 5vw, 36px);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 16px #ffd70088, 0 0 40px #ffd70044;
+    letter-spacing: 4px;
+  }
+  .wallet-header p {
+    font-size: 11px;
+    color: #6677aa;
+    letter-spacing: 3px;
+    margin-top: 4px;
+  }
+
+  /* ── BALANCE CARD ── */
+  .balance-card {
+    background: var(--panel);
+    border: 2px solid var(--gold);
+    border-radius: 18px;
+    padding: 24px 40px;
+    text-align: center;
+    box-shadow: 0 0 40px #ffd70022, 0 0 80px #0000cc22;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 28px;
+    min-width: 280px;
+  }
+  .balance-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #ffd70033 0%, transparent 50%, #ffd70011 100%);
+    pointer-events: none;
+  }
+  .balance-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #8899bb;
+    margin-bottom: 6px;
+  }
+  .balance-amount {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(40px, 10vw, 64px);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 20px #ffd70099;
+    line-height: 1;
+    transition: color 0.3s, text-shadow 0.3s;
+  }
+  .balance-amount.win-flash {
+    color: var(--green);
+    text-shadow: 0 0 24px #00ff8899;
+  }
+  .balance-amount.lose-flash {
+    color: var(--red);
+    text-shadow: 0 0 24px #ff334499;
+  }
+  .balance-cents {
+    font-size: 20px;
+    opacity: 0.6;
+  }
+  .balance-zero {
+    display: none;
+    font-size: 12px;
+    color: var(--red);
+    letter-spacing: 2px;
+    margin-top: 6px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120%);
+    background: var(--panel);
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    padding: 16px 28px;
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold);
+    z-index: 999;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 40px #00000099, 0 0 30px #ffd70044;
+    max-width: 90vw;
+    min-width: 260px;
+  }
+  .toast.visible {
+    transform: translateX(-50%) translateY(16px);
+  }
+  .toast.win { border-color: var(--green); color: var(--green); }
+  .toast.lose { border-color: var(--red); color: var(--red); }
+
+  /* ── WALLET ITEMS (ticket / pull tab previews) ── */
+  .wallet-items {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .wallet-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 160px;
+  }
+  .wallet-item-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #556;
+  }
+  .wallet-item iframe {
+    border: none;
+    border-radius: 8px;
+    background: #111;
+    display: block;
+  }
+
+  /* ── GAME GRID ── */
+  .games-label {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #4455aa;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    width: 100%;
+    max-width: 520px;
+  }
+  .game-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 18px 12px;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    text-decoration: none;
+    color: #cce;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .game-btn:hover:not(.disabled) {
+    border-color: var(--cyan);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 191, 255, 0.15);
+  }
+  .game-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .game-btn .icon { font-size: 28px; }
+  .game-btn .name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--cyan);
+    text-align: center;
+  }
+  .game-btn .cost {
+    font-size: 10px;
+    color: #556;
+    letter-spacing: 1px;
+  }
+  .game-btn.keno { border-color: #330000; }
+  .game-btn.keno:hover:not(.disabled) { border-color: #cc0000; box-shadow: 0 8px 30px rgba(200,0,0,0.2); }
+  .game-btn.keno .name { color: #ff5555; }
+  .game-btn.tunes { border-color: #001133; }
+  .game-btn.tunes:hover:not(.disabled) { border-color: #0077cc; box-shadow: 0 8px 30px rgba(0,119,204,0.2); }
+  .game-btn.tunes .name { color: var(--cyan); }
+  .game-btn.pulltab { border-color: #221100; }
+  .game-btn.pulltab:hover:not(.disabled) { border-color: #cc7700; box-shadow: 0 8px 30px rgba(200,120,0,0.2); }
+  .game-btn.pulltab .name { color: var(--gold); }
+  .game-btn.arcade { border-color: #002211; }
+  .game-btn.arcade:hover:not(.disabled) { border-color: #00aa66; box-shadow: 0 8px 30px rgba(0,170,100,0.2); }
+  .game-btn.arcade .name { color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<div class="wallet-header">
+  <h1>💳 ARCADE WALLET</h1>
+  <p>YOUR CREDITS · SHARED ACROSS ALL GAMES</p>
+</div>
+
+<!-- BALANCE -->
+<div class="balance-card">
+  <div class="balance-label">CURRENT BALANCE</div>
+  <div class="balance-amount" id="balanceDisplay">$<span id="balanceAmt">20</span><span class="balance-cents">.00</span></div>
+  <div class="balance-zero" id="zeroMsg">⛔ OUT OF CREDITS — ADD FUNDS</div>
+</div>
+
+<!-- WALLET ITEMS: ticket + pull tab iframes -->
+<div class="wallet-items">
+  <div class="wallet-item">
+    <div class="wallet-item-label">KENO TICKET</div>
+    <iframe src="http://www.marcitech.is-a.dev/GoRedKeno/index?target=ticket" width="200" height="220" scrolling="no" title="Keno Ticket"></iframe>
+  </div>
+  <div class="wallet-item">
+    <div class="wallet-item-label">PULL TAB</div>
+    <iframe src="http://www.marcitech.is-a.dev/PullTabs/index?target=pulltab" width="200" height="220" scrolling="no" title="Pull Tab"></iframe>
+  </div>
+</div>
+
+<!-- GAME LINKS -->
+<div class="games-label">PLAY A GAME · $1.00 PER PLAY</div>
+<div class="games-grid" id="gamesGrid">
+  <a class="game-btn keno" id="btnKeno" href="GoRedKeno/index.html" onclick="return launchGame(event, this)">
+    <span class="icon">🎱</span>
+    <span class="name">GO RED KENO</span>
+    <span class="cost">$1 · WIN UP TO $500</span>
+  </a>
+  <a class="game-btn tunes" id="btnTunes" href="PressTunes/index.html" onclick="return launchGame(event, this)">
+    <span class="icon">🎵</span>
+    <span class="name">PRESS TUNES</span>
+    <span class="cost">$1 · WIN UP TO $50</span>
+  </a>
+  <a class="game-btn pulltab" id="btnPull" href="PullTabs/index.html" onclick="return launchGame(event, this)">
+    <span class="icon">🎟️</span>
+    <span class="name">PULL TABS</span>
+    <span class="cost">$1 · WIN UP TO $200</span>
+  </a>
+  <a class="game-btn arcade" id="btnArcade" href="SuperTouch/index.html" onclick="return launchGame(event, this)">
+    <span class="icon">🕹️</span>
+    <span class="name">SUPER TOUCH</span>
+    <span class="cost">FREE PLAY</span>
+  </a>
+</div>
+
+<script>
+// ─── SHARED WALLET KEY ───────────────────────────────────────────────────────
+const WALLET_KEY = 'arcade_wallet';
+
+function getBalance() {
+  const v = localStorage.getItem(WALLET_KEY);
+  if (v === null) {
+    localStorage.setItem(WALLET_KEY, '20');
+    return 20;
+  }
+  return parseFloat(v) || 0;
+}
+function setBalance(val) {
+  const clamped = Math.max(0, Math.round(val * 100) / 100);
+  localStorage.setItem(WALLET_KEY, String(clamped));
+  renderBalance(clamped);
+  return clamped;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function renderBalance(bal) {
+  bal = typeof bal === 'number' ? bal : getBalance();
+  document.getElementById('balanceAmt').textContent = bal.toFixed(0);
+  const zeroMsg = document.getElementById('zeroMsg');
+  zeroMsg.style.display = bal <= 0 ? 'block' : 'none';
+
+  // disable paid game buttons if broke
+  ['btnKeno','btnTunes','btnPull'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (bal <= 0) btn.classList.add('disabled');
+    else btn.classList.remove('disabled');
+  });
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast visible ' + (type || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.remove('visible'); }, 4000);
+}
+
+// ─── FLASH BALANCE ────────────────────────────────────────────────────────────
+function flashBalance(type) {
+  const el = document.getElementById('balanceDisplay');
+  el.classList.add(type === 'win' ? 'win-flash' : 'lose-flash');
+  setTimeout(() => el.classList.remove('win-flash', 'lose-flash'), 1500);
+}
+
+// ─── URL PARAMS: betwin / betlose ─────────────────────────────────────────────
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('betwin')) {
+    const label = params.get('betwin') || 'bet';
+    const newBal = setBalance(getBalance() + 10);
+    flashBalance('win');
+    showToast(`🎉 Congratulations! You won $10 in the ${label} bet! Balance: $${newBal}`, 'win');
+    // clean URL
+    history.replaceState({}, '', window.location.pathname);
+  } else if (params.has('betlose')) {
+    const label = params.get('betlose') || 'bet';
+    const newBal = setBalance(getBalance() - 10);
+    flashBalance('lose');
+    showToast(`😔 Sorry, you lost $10 in the ${label} bet. Balance: $${newBal}`, 'lose');
+    history.replaceState({}, '', window.location.pathname);
+  }
+})();
+
+// ─── WIN CALLBACK: sub-apps post a message when they finish ──────────────────
+window.addEventListener('message', function(e) {
+  const d = e.data;
+  if (!d || typeof d !== 'object') return;
+
+  if (d.type === 'ARCADE_WIN' && typeof d.amount === 'number' && d.amount > 0) {
+    const newBal = setBalance(getBalance() + d.amount);
+    flashBalance('win');
+    showToast(`🎉 You won $${d.amount}! New balance: $${newBal}`, 'win');
+  }
+  if (d.type === 'ARCADE_LOSE') {
+    renderBalance();
+  }
+});
+
+// ─── LAUNCH GAME: deduct $1 then navigate ────────────────────────────────────
+function launchGame(evt, btn) {
+  // Super Touch is free
+  if (btn.id === 'btnArcade') return true;
+
+  evt.preventDefault();
+  const bal = getBalance();
+  if (bal <= 0) {
+    showToast('⛔ No credits! Add funds to play.', 'lose');
+    return false;
+  }
+  const newBal = setBalance(bal - 1);
+  showToast(`-$1 deducted. Balance: $${newBal}`, '');
+  setTimeout(() => { window.location.href = btn.href; }, 600);
+  return false;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderBalance(getBalance());
+</script>
+</body>
+</html>
